@@ -9,21 +9,20 @@ from networkx.readwrite import json_graph
 import json
 
 diG = nx.DiGraph()
-
+newListOfLines = []
 
 def editUselessString(filename, searchString, replacementString):
-    edittedStrings = []
+    editedStrings = []
     with open(filename, 'r') as infile:
         for line in infile:
             if line.find(searchString) >= 0:
-                edittedStrings.append(replacementString)
+                editedStrings.append(replacementString)
             else:
-               edittedStrings.append(line)
-    return edittedStrings
+               editedStrings.append(line)
+    return editedStrings
 
 
 newListOfLines = editUselessString('local_cybershake_100', 'xmlns', '<adag version="2.1" count="1" index="0" name="test" jobCount="25" fileCount="0" childCount="20">\n')
-
 
 def replaceOldString(filename):
     with open(filename, 'w+') as outfile:
@@ -31,7 +30,7 @@ def replaceOldString(filename):
             outfile.write(line)
 
 
-replaceOldString('local_cybershake_100')
+replaceOldString('edited_local_cybershake_100')
 
 def addNodes(parsed_xml, diGNodes):
     root = parsed_xml.getroot()
@@ -41,7 +40,7 @@ def addNodes(parsed_xml, diGNodes):
         diGNodes.add_node(job_id, runtime=runtime)
 
 
-addNodes(et.parse('/home/sarah/Documents/ICRARSummer19-20/ICRARShadow/local_cybershake_100'), diG)
+addNodes(et.parse('edited_local_cybershake_100'), diG)
 
 
 def addEdges(parsed_xml, diGEdges):
@@ -53,7 +52,7 @@ def addEdges(parsed_xml, diGEdges):
             diGEdges.add_edge(u_edge, v_edge)
 
 
-addEdges(et.parse('/home/sarah/Documents/ICRARSummer19-20/ICRARShadow/local_cybershake_100'), diG)
+addEdges(et.parse('edited_local_cybershake_100'), diG)
 
 
 # converted_nx = json_graph.node_link_data(diG) # is this line necessary, can it be done in place in the one two down
