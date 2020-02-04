@@ -31,7 +31,7 @@ def replaceOldString(filename):
             outfile.write(line)
 
 
-replaceOldString('local_cybershake_100_editNS')
+replaceOldString('local_cybershake_100')
 
 def addNodes(parsed_xml, diGNodes):
     root = parsed_xml.getroot()
