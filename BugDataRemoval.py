@@ -7,7 +7,6 @@ readfile = 'local_cybershake_100'
 search = 'xmlns'
 replacement = '<adag version="2.1" count="1" index="0" name="test" jobCount="25" fileCount="0" childCount="20">\n'
                 # needs backslh n for new line
-writefile = 'ed'
 
 
 def editUselessString(filename, searchString, replacementString):
@@ -24,7 +23,7 @@ newListOfLines = editUselessString(readfile, search, replacement)
 
 
 def replaceOldString(filename):
-    with open(filename, 'w') as outfile:
+    with open(filename, 'w+') as outfile:
         for line in newListOfLines:
             outfile.write(line)
-replaceOldString(writefile)
+replaceOldString(readfile + "_editNS")
