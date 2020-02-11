@@ -41,6 +41,20 @@ def addEdges(parsed_xml, buildingDiG):
         v_edge = child.get('ref')
         for parent in root.iter('parent'):
             u_edge = parent.get('ref')
-            buildingDiG.add_edge(u_edge, v_edge)
+        # makes node IDs into ints
+            num_v_edge = int(v_edge[2:])
+            num_u_edge = int(u_edge[2:])
+        # this may be more efficient through a swap variable
+        # format of edge naming is heft_file_"lower_node_ID"_"upper_node_ID"
+            if num_u_edge < num_v_edge:
+                lower_node = num_u_edge
+                upper_node = num_v_edge
+            else:
+                lower_node = num_v_edge
+                upper_node = num_u_edge
+            for use in root.iter('uses'):
+                edgeUse = use.get('file')
+                if edgeUse == "heft_file_" + str(lower_node) + "_" + str(upper_node):
+                    size = use.get('size')
+        buildingDiG.add_edge(u_edge, v_edge, data_size = size)
     return buildingDiG
-
