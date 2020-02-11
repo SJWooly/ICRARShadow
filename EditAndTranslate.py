@@ -7,15 +7,17 @@ import networkx as nx
 
 
 # allows for removal of string which interferes with etree
-def editUselessString(filename, searchString, replacementString):
+def editUselessString(filename, searchStr, replacementStr):
     with open(filename, 'r') as infile:
-        editedStrings = []
+        editedStrLines = []
         for line in infile:
-            if line.find(searchString) >= 0:
-                editedStrings.append(replacementString)
+            # output of searchString method is the index of said str or
+            # -1 if the searchStr is not present
+            if line.find(searchStr) >= 0:
+                editedStrLines.append(replacementStr)
             else:
-               editedStrings.append(line)
-    return editedStrings
+               editedStrLines.append(line)
+    return editedStrLines
 
 
 # replaces removed string with only the relevant contents of that line
@@ -30,8 +32,10 @@ def addNodes(parsed_xml,):
     root = parsed_xml.getroot()
     for job in root.findall('job'):
         job_id = job.get('id')
-        runtime = job.get('runtime')  # variable names
-        buildingDiG.add_node(job_id, comp=runtime) #check variable name here
+        runtime = job.get('runtime')
+        buildingDiG.add_node(job_id, comp=runtime)
+    # building DiG is the 'work in progress' DiGraph, at this point only
+    # containing the nodes and their attributes
     return buildingDiG
 
 #adds edges to the building DAG
@@ -41,7 +45,7 @@ def addEdges(parsed_xml, buildingDiG):
         v_edge = child.get('ref')
         for parent in root.iter('parent'):
             u_edge = parent.get('ref')
-        # makes node IDs into ints
+        # makes node IDs into ints, by ignoring the ID prefix
             num_v_edge = int(v_edge[2:])
             num_u_edge = int(u_edge[2:])
         # this may be more efficient through a swap variable
@@ -56,5 +60,5 @@ def addEdges(parsed_xml, buildingDiG):
                 edgeUse = use.get('file')
                 if edgeUse == "heft_file_" + str(lower_node) + "_" + str(upper_node):
                     size = use.get('size')
-        buildingDiG.add_edge(u_edge, v_edge, data_size = size)
+        buildingDiG.add_edge(u_edge, v_edge, data_size=size)
     return buildingDiG
