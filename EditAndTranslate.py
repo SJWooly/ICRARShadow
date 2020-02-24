@@ -4,7 +4,7 @@
 
 
 import networkx as nx
-
+import sys
 # allows for removal of string which interferes with etree
 
 def clean_xml(filename, newfile, search_str, replacement_str):
@@ -21,38 +21,43 @@ def clean_xml(filename, newfile, search_str, replacement_str):
 		for line in edited_str_lines:
 			outfile.write(line)
 
+
 # adds edges to the building DAG
-def build_dag(parsed_xml, building_dag):
+def build_dag(parsed_xml):
 	building_dag = nx.DiGraph()
+	parsed_xml = et.parse(xml)
 	root = parsed_xml.getroot()
-	for job in root.findall('job'):
-		job_id = job.get('id')
-		runtime = job.get('runtime')
-		building_dag.add_node(job_id, comp=runtime)
+	for child in root.findall("child"):
+		id = child.get('ref')
+		for parent in child.findall("parent"):
+			pid = parent.get('ref')
+			building_dag.add_edge(pid, id)
+	for node in building_dag.nodes:
+		runtime = [e.get('runtime') for e in root.findall("job/[@id='{0}']".format(node))]
+		building_dag.nodes[node]['comp'] = float(runtime[0])
+		x = node
 
-	for child in root.findall('child'):
-		v_edge = child.get('ref')
-		for parent in root.iter('parent'):
-			u_edge = parent.get('ref')
-			# makes node IDs into ints, by ignoring the ID prefix
-			num_v_edge = int(v_edge[2:])
-			num_u_edge = int(u_edge[2:])
-			# this may be more efficient through a swap variable
-			# format of edge naming is heft_file_"lower_node_ID"_"upper_node_ID"
-			if num_u_edge < num_v_edge:
-				lower_node = num_u_edge
-				upper_node = num_v_edge
-			else:
-				lower_node = num_v_edge
-				upper_node = num_u_edge
-			for use in root.iter('uses'):
-				edge_use = use.get('file')
-				if edge_use == "heft_file_" + str(lower_node) + "_" + str(upper_node):
-					size = use.get('size')
-		building_dag.add_edge(u_edge, v_edge, data_size=size)
+	for edge in building_dag.edges:
+		output = [e.get('file') for e in
+				  root.findall("job/[@id='{0}']/uses/[@link='output'][@file]".format(edge[0]))]
+		input = [e.get('file') for e in root.findall("job/[@id='{0}']/uses/[@link='input'][@file]".format(edge[1]))]
+		sout = set(output)
+		sinput = set(input)
+		intersect_file = (sout & sinput)
+		# CYBERSHAKE DOES SOMETHING DIFFERENT HERE (DON'T ASK ME WHY)
+		if len(intersect_file) == 0:
+			building_dag.edges[edge]['size'] = float(0)
+		elif len(intersect_file) > 0:
+			# Loop through each of the intersect files and add up the cumulative data
+			total = 0
+			for file in intersect_file:
+				element = root.findall("job/[@id='{0}']/uses/[@link='output'][@file='{1}']".format(edge[0], file))
+				total += float(element[0].get('size'))
+			building_dag.edges[edge]['size'] = total
+		else:
+			sys.exit("Issues translating DAX")
+
 	return building_dag
-
-
 if __name__ == '__main__':
 	import xml.etree.ElementTree as et
 	from networkx.readwrite import json_graph
